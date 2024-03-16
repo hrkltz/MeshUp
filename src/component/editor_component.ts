@@ -1,5 +1,5 @@
-import {CSSResult, LitElement, TemplateResult, css, html} from 'lit';
-import {customElement, eventOptions, property, query} from 'lit/decorators.js';
+import { CSSResult, LitElement, TemplateResult, css, html } from 'lit';
+import { customElement, property, query } from 'lit/decorators.js';
 import { NodeComponent } from './node_component';
 
 
@@ -26,6 +26,7 @@ export class EditorComponent extends LitElement {
     }
 
     svg:focus {
+        background-color: transparent;
         outline: none;
         border-color: blue;
         border-style: solid;
@@ -43,16 +44,12 @@ export class EditorComponent extends LitElement {
     @query('g#transformer') _transformer!: SVGElement;
     @query('svg') _svg!: SVGElement;
 
-    @property({type: Number}) tabIndex: number = -1;
-
-
 
     // Note: tabindex is required to make the svg element focusable which allows it to react to key events. Somehow it can't be set in the property decorator but it works if the first child has it.
     override render(): TemplateResult {
         return html`
         <svg
-        id="svg"
-        tabindex=${-1}>
+        id="svg">
             <g
             id="transformer"
             transform="translate(${this._offsetX},${this._offsetY}) scale(${this._zoom})">
@@ -104,10 +101,10 @@ export class EditorComponent extends LitElement {
             this.requestUpdate();
         } else {
             const foreignObject = this._focus.parentElement;
-            const x = Number(foreignObject.getAttribute('x'));
-            const y = Number(foreignObject.getAttribute('y'));
-            foreignObject.setAttribute('x', x + (event.clientX - this._previousEvent!.clientX)/this._zoom);
-            foreignObject.setAttribute('y', y + (event.clientY - this._previousEvent!.clientY)/this._zoom);
+            const x = Number(foreignObject!.getAttribute('x'));
+            const y = Number(foreignObject!.getAttribute('y'));
+            foreignObject!.setAttribute('x', `${x + (event.clientX - this._previousEvent!.clientX)/this._zoom}`);
+            foreignObject!.setAttribute('y', `${y + (event.clientY - this._previousEvent!.clientY)/this._zoom}`);
         }
 
         this._previousEvent = event;
@@ -182,42 +179,38 @@ export class EditorComponent extends LitElement {
         };
     }
     
-    _windowOnmeshupfocus: ((this: Window, ev: WindowEventMap[K]) => any) = (event: CustomEvent) => {
+    _windowOnmeshupfocus: ((this: Window, ev: any) => any) = (event: CustomEvent) => {
         console.log('EditorComponent._windowOnmeshupfocus');
         this._focus = event.detail;
     }
     _onkeydownNodeComponentHandler: ((this: GlobalEventHandlers, ev: KeyboardEvent) => any) = (event: KeyboardEvent) => {
         switch (event.key) {
             case 'ArrowUp': {
-                const foreignObject = this._focus.parentElement;
-                const y = Number(foreignObject.getAttribute('y'));
-                foreignObject.setAttribute('y', y - 25);
+                const foreignObject = this._focus!.parentElement;
+                const y = Number(foreignObject!.getAttribute('y'));
+                foreignObject!.setAttribute('y', `${y - 25}`);
             } break;
             case 'ArrowDown': {
-                const foreignObject = this._focus.parentElement;
-                const y = Number(foreignObject.getAttribute('y'));
-                foreignObject.setAttribute('y', y + 25);
+                const foreignObject = this._focus!.parentElement;
+                const y = Number(foreignObject!.getAttribute('y'));
+                foreignObject!.setAttribute('y', `${y + 25}`);
             } break;
             case 'ArrowLeft': {
-                const foreignObject = this._focus.parentElement;
-                const x = Number(foreignObject.getAttribute('x'));
-                foreignObject.setAttribute('x', x - 25);}
+                const foreignObject = this._focus!.parentElement;
+                const x = Number(foreignObject!.getAttribute('x'));
+                foreignObject!.setAttribute('x', `${x - 25}`);}
             break;
             case 'ArrowRight': {
-                const foreignObject = this._focus.parentElement;
-                const x = Number(foreignObject.getAttribute('x'));
-                foreignObject.setAttribute('x', x + 25);
+                const foreignObject = this._focus!.parentElement;
+                const x = Number(foreignObject!.getAttribute('x'));
+                foreignObject!.setAttribute('x', `${x + 25}`);
             } break;
             case 'd':
                 if (!event.ctrlKey) return;
 
-                const foreignObject = this._focus.parentElement;
-                this._transformer.removeChild(foreignObject);
-                this._svg.focus();
-                //this.focus();
-                //this.onfocus(new FocusEvent('focus'));
-                //document.dispatchEvent(new CustomEvent('meshup-focus', {detail: null}));
-                // TODO: Set the focus to editor-component.
+                const foreignObject = this._focus!.parentElement;
+                this._transformer.removeChild(foreignObject!);
+                this.focus();
             break;
         };
     }

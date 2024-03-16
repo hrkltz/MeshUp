@@ -1,5 +1,5 @@
 import {CSSResult, LitElement, css, html} from 'lit';
-import {customElement, property} from 'lit/decorators.js';
+import {customElement} from 'lit/decorators.js';
 
 
 @customElement('node-component')
@@ -44,8 +44,7 @@ export class NodeComponent extends LitElement {
     override render() {
         return html`
             <div
-            tabindex=${-1}
-            @keydown=${this._keydownHandler}>Hallo</div>
+            tabindex=${-1}>Hallo</div>
         `;
     }
 }
