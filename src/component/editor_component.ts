@@ -70,11 +70,15 @@ export class EditorComponent extends LitElement {
         let shadowRootElementArray = this.shadowRoot!.elementsFromPoint(x, y)!;
         let nodeComponent = shadowRootElementArray.find((e) => e.tagName === 'NODE-COMPONENT');
         
-        if (nodeComponent) elementArray.push(nodeComponent);
+        if (nodeComponent) {
+            elementArray.push(nodeComponent);
         
-        let nodePartComponent = shadowRootElementArray.find((e) => e.tagName === 'NODE-INPUT-PORT-COMPONENT' || e.tagName === 'NODE-CORE-COMPONENT' || e.tagName === 'NODE-OUTPUT-PORT-COMPONENT');
-        
-        if (nodePartComponent) elementArray.push(nodePartComponent);
+            let nodePartComponent = shadowRootElementArray.find((e) => e.tagName === 'NODE-INPUT-PORT-COMPONENT' || e.tagName === 'NODE-CORE-COMPONENT' || e.tagName === 'NODE-OUTPUT-PORT-COMPONENT');
+            
+            if (nodePartComponent) {
+                elementArray.push(nodePartComponent);
+            };
+        };
 
         return elementArray;
     };
@@ -82,12 +86,14 @@ export class EditorComponent extends LitElement {
 
     private _calculateXAbsolute(x: number): number {
         const svgRect = this._svg.getBoundingClientRect()!;
+
         return (x - svgRect.left - this._offsetX)/this._zoom;
     };
 
 
     private _calculateYAbsolute(y: number): number {
         const svgRect = this._svg.getBoundingClientRect()!;
+        
         return (y - svgRect.top - this._offsetY)/this._zoom;
     };
 
@@ -173,11 +179,11 @@ export class EditorComponent extends LitElement {
     public deleteNode(nodeComponent: NodeComponent) {
         const foreignObject = nodeComponent.parentElement;
         //// ShadowRoot again. :/ Let's dissable it.
-        //const connectedLines = [].filter.call(this.getElementsByTagName(`line`), (e: SVGLineElement) => e.id.includes(nodeComponent.id));
-        //console.log(connectedLines)
-        //for (let i = 0; i < connectedLines.length; i++) {
-        //    this._transformer.removeChild(connectedLines[i]);
-        //};
+        const connectedLines = [].filter.call(this.shadowRoot!.querySelectorAll('line'), (e: SVGLineElement) => e.id.includes(nodeComponent.id));
+
+        for (let i = 0; i < connectedLines.length; i++) {
+            this._transformer.removeChild(connectedLines[i]);
+        };
 
         this._transformer.removeChild(foreignObject!);
     };

@@ -167,7 +167,6 @@ export class AppComponent extends LitElement {
                         if (this._hoveredElement.element!.tagName === 'NODE-INPUT-PORT-COMPONENT') {
                             this._editorComponent!.createConnection(this._clickedElement.element! as NodeOutputPortComponent, this._hoveredElement.element! as NodeInputPortComponent);
                         };
-                        
                         break;
                 };
 
