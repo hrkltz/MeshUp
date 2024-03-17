@@ -15,14 +15,14 @@ export class NodeCoreComponent extends LitElement {
             height: 100%;
             justify-content: center;
             width: 100%;
-        };
+        }
 
         @media (prefers-color-scheme: dark) {
             node-core-component {
                 background-color: var(--background-night);
                 border-color: var(--border-night);
-            };
-        };
+            }
+        }
     `;
 
 

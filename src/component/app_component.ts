@@ -14,22 +14,22 @@ export class AppComponent extends LitElement {
             flex-direction: column;
             width: 100%;
             height: 100%;
-        };
+        }
 
         h1 {
             flex: 0 0 auto;
-        };
+        }
 
         editor-component {
             flex: 1 1 auto;
-        };
+        }
 
         info-component {
             position: absolute;
             bottom: 0;
             right: 0;
             z-index: 10;
-        };
+        }
     `;
 
 

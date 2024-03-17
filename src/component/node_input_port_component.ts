@@ -14,7 +14,7 @@ export class NodeInputPortComponent extends LitElement {
             box-sizing: border-box;
             border: 1px solid grey;
             text-align: center;
-        };
+        }
     `;
 
 
