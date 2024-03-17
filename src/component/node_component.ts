@@ -1,5 +1,6 @@
 import { CSSResult, LitElement, css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { v4 as uuidv4 } from 'uuid';
 
 
 @customElement('node-component')
@@ -36,9 +37,9 @@ export class NodeComponent extends LitElement {
         }
     `;
 
-    
-    height: string = "100px";
-    width: string = "100px";
+    public id: string = uuidv4();
+    height: string = "60px";
+    width: string = "80px";
     x: number = 0;
     y: number = 0;
 
@@ -46,12 +47,15 @@ export class NodeComponent extends LitElement {
     override render() {
         return html`
             <div class="input-container">
-                <node-input-port-component>1</node-input-port-component>
-                <node-input-port-component>2</node-input-port-component>
+                <node-input-port-component id="${this.id}.in1">1</node-input-port-component>
+                <node-input-port-component id="${this.id}.in2">2</node-input-port-component>
+                <node-input-port-component id="${this.id}.in3">3</node-input-port-component>
             </div>
             <node-core-component></node-core-component>
             <div class="output-container">
-                <node-output-port-component>1</node-output-port-component>
+                <node-output-port-component id="${this.id}.out1">1</node-output-port-component>
+                <node-output-port-component id="${this.id}.out2">2</node-output-port-component>
+                <node-output-port-component id="${this.id}.out3">3</node-output-port-component>
             </div>
         `;
     }

@@ -1,17 +1,19 @@
-import { CSSResult, LitElement, css } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { CSSResult, LitElement, css, html } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 
 
 @customElement('node-core-component')
 export class NodeCoreComponent extends LitElement {
     static override styles: CSSResult = css`
         :host {
+            align-items: center;
             background-color: var(--background-day);
             border: 1px solid var(--border-day);
             box-sizing: border-box;
             color: #000000;
-            display: block;
+            display: flex;
             height: 100%;
+            justify-content: center;
             width: 100%;
         }
 

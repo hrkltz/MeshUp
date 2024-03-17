@@ -124,9 +124,14 @@ export class EditorComponent extends LitElement {
 
 
     public createConnection(nodeOutputPortComponent: NodeOutputPortComponent, nodeInputPortComponent: NodeInputPortComponent) {
+        // Don't connect if both ports are part of the same node.
+        if (nodeOutputPortComponent.id.split('.')[0] === nodeInputPortComponent.id.split('.')[0]) return;
+
+        // TODO: Don't connect if the input port is already connected.
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.style.stroke = 'blue';
         line.style.strokeWidth = '2';
+        line.id = `${nodeOutputPortComponent.id}:${nodeInputPortComponent.id}`;
         line.setAttribute('x1', String(this._calculateXAbsolute(nodeOutputPortComponent.cX)));
         line.setAttribute('y1', String(this._calculateYAbsolute(nodeOutputPortComponent.cY)));
         line.setAttribute('x2', String(this._calculateXAbsolute(nodeInputPortComponent.cX)));
@@ -143,6 +148,13 @@ export class EditorComponent extends LitElement {
 
     public deleteNode(nodeComponent: NodeComponent) {
         const foreignObject = nodeComponent.parentElement;
+        //// ShadowRoot again. :/ Let's dissable it.
+        //const connectedLines = [].filter.call(this.getElementsByTagName(`line`), (e: SVGLineElement) => e.id.includes(nodeComponent.id));
+        //console.log(connectedLines)
+        //for (let i = 0; i < connectedLines.length; i++) {
+        //    this._transformer.removeChild(connectedLines[i]);
+        //};
+
         this._transformer.removeChild(foreignObject!);
     }
 };
