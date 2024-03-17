@@ -1,5 +1,5 @@
 import { CSSResult, LitElement, css, html } from 'lit';
-import { customElement, query } from 'lit/decorators.js';
+import { customElement, query, state } from 'lit/decorators.js';
 import { EditorComponent } from './editor_component';
 import { NodeComponent } from './node_component';
 
@@ -21,20 +21,30 @@ export class AppComponent extends LitElement {
         editor-component {
             flex: 1 1 auto;
         }
+
+        info-component {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            z-index: 10;
+        }
     `;
 
 
+    @state()
     private _selectedElement: Element | null = null;
+    private _hoverElement: Element | null = null;
     private _previousMouseEvent: MouseEvent | null = null;
     private _mousePositionX: number = 0;
     private _mousePositionY: number = 0;
     @query('editor-component', true) private _editorComponent!: EditorComponent;
-    
+
 
     override render() {
         return html`
             <h1>MeshUp</h1>
             <editor-component></editor-component>
+            <info-component selectedElementTagName=${this._hoverElement ? this._hoverElement.tagName : ''}></info-component>
         `;
     }
 
@@ -110,6 +120,7 @@ export class AppComponent extends LitElement {
 
 
     _onMouseMove(event: MouseEvent): void {
+        this._hoverElement = this._findTargetElement();
         this._mousePositionX = event.clientX;
         this._mousePositionY = event.clientY;
 
@@ -141,7 +152,8 @@ export class AppComponent extends LitElement {
             let selectedSubComponent = this._selectedElement.shadowRoot!.elementFromPoint(this._mousePositionX, this._mousePositionY);
 
             if (['NODE-COMPONENT'].includes(selectedSubComponent!.tagName)) {
-                this._selectedElement = selectedSubComponent;
+                let selectedSubSubComponent = selectedSubComponent!.shadowRoot!.elementFromPoint(this._mousePositionX, this._mousePositionY);
+                this._selectedElement = selectedSubSubComponent;
             };
         };
 
