@@ -12,14 +12,14 @@ export class NodeComponent extends LitElement {
             width: 100%;
             height: 100%;
             box-sizing: border-box;
-        }
+        };
 
         node-component > div.input-container,
         node-component > div.output-container {
             height: 100%;
             box-sizing: border-box;
             flex: 0 0 20px;
-        }
+        };
 
         node-component > node-core-component {
             height: 100%;
@@ -27,15 +27,16 @@ export class NodeComponent extends LitElement {
             background-color: #fff;
             box-sizing: border-box;
             border: 1px solid grey;
-        }
+        };
 
         node-component > div.input-container > node-input-port-component,
         node-component > div.output-container > node-output-port-component {
             height: 20px;
             width: 100%;
             box-sizing: border-box;
-        }
+        };
     `;
+
 
     public id: string = uuidv4();
     height: string = "60px";
@@ -58,11 +59,11 @@ export class NodeComponent extends LitElement {
                 <node-output-port-component id="${this.id}.out3">3</node-output-port-component>
             </div>
         `;
-    }
+    };
 
 
     // Disable shadow DOM for this element.
     protected createRenderRoot() {
         return this;
-    }
-}
+    };
+};

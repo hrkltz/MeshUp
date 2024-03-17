@@ -14,22 +14,22 @@ export class AppComponent extends LitElement {
             flex-direction: column;
             width: 100%;
             height: 100%;
-        }
+        };
 
         h1 {
             flex: 0 0 auto;
-        }
+        };
 
         editor-component {
             flex: 1 1 auto;
-        }
+        };
 
         info-component {
             position: absolute;
             bottom: 0;
             right: 0;
             z-index: 10;
-        }
+        };
     `;
 
 
@@ -49,7 +49,7 @@ export class AppComponent extends LitElement {
             <editor-component></editor-component>
             <info-component selectedElementTagName=${this._hoveredElement.element ? this._hoveredElement.element.tagName : ''}></info-component>
         `;
-    }
+    };
 
 
     connectedCallback(): void {
@@ -114,7 +114,7 @@ export class AppComponent extends LitElement {
                 };
                 break;
         };
-    }
+    };
 
 
     _onMouseDown(event: MouseEvent): void {
@@ -123,8 +123,8 @@ export class AppComponent extends LitElement {
                 this._clickedElement = this._findPointedElement();
                 this._previousMouseEvent = event;
                 break;
-        }
-    }
+        };
+    };
 
 
     _onMouseMove(event: MouseEvent): void {
@@ -151,7 +151,7 @@ export class AppComponent extends LitElement {
 
                 this._previousMouseEvent = event;
                 break;
-        }
+        };
     };
 
 
@@ -164,15 +164,17 @@ export class AppComponent extends LitElement {
                     case 'NODE-OUTPUT-PORT-COMPONENT':
                         this._editorComponent!.clearGhostConnection();
 
-                        if (this._hoveredElement.element!.tagName === 'NODE-INPUT-PORT-COMPONENT')
+                        if (this._hoveredElement.element!.tagName === 'NODE-INPUT-PORT-COMPONENT') {
                             this._editorComponent!.createConnection(this._clickedElement.element! as NodeOutputPortComponent, this._hoveredElement.element! as NodeInputPortComponent);
+                        };
+                        
                         break;
                 };
 
                 this._clickedElement = { element: null, parentElement: null };
                 this._previousMouseEvent = null;
                 break;
-        }
+        };
     };
 
 

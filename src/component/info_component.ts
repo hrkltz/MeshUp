@@ -9,14 +9,14 @@ export class InfoComponent extends LitElement {
             box-sizing: border-box;
             background-color: var(--background-day);
             border: 1px solid var(--border-day);
-        }
+        };
 
         @media (prefers-color-scheme: dark) {
             :host {
                 background-color: var(--background-night);
                 border-color: var(--border-night);
-            }
-        }
+            };
+        };
     `;
 
     
@@ -40,6 +40,6 @@ export class InfoComponent extends LitElement {
                     <h2>Info Box</h2>
                     <p>${this.selectedElementTagName}</p>
                 `;
-        }
-    }
-}
+        };
+    };
+};

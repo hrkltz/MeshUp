@@ -14,25 +14,25 @@ export class NodeInputPortComponent extends LitElement {
             box-sizing: border-box;
             border: 1px solid grey;
             text-align: center;
-        }
+        };
     `;
 
 
     public get cX() : number {
         return this.getBoundingClientRect().left + this.getBoundingClientRect().width/2;
-    }
+    };
     public get cY() : number {
         return this.getBoundingClientRect().top + this.getBoundingClientRect().height/2;
-    }
+    };
 
 
     override render() {
         return html`<slot></slot>`;
-    }
+    };
 
 
     // Disable shadow DOM for this element.
     protected createRenderRoot() {
         return this;
-    }
+    };
 }
