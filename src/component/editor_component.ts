@@ -108,7 +108,7 @@ export class EditorComponent extends LitElement {
     }
 
 
-    public drawConnection(nodeOutputPortComponent: NodeOutputPortComponent, x: number, y: number) {
+    public drawGhostConnection(nodeOutputPortComponent: NodeOutputPortComponent, x: number, y: number) {
         if (this._ghostConnection === null) {
             this._ghostConnection = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             this._ghostConnection.style.stroke = 'black';
@@ -120,7 +120,6 @@ export class EditorComponent extends LitElement {
 
         this._ghostConnection.setAttribute('x2', String(this._calculateXAbsolute(x)));
         this._ghostConnection.setAttribute('y2', String(this._calculateYAbsolute(y)));
-        this.requestUpdate();
     }
 
 

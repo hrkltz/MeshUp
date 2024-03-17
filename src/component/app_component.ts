@@ -145,7 +145,7 @@ export class AppComponent extends LitElement {
                         this._editorComponent!.moveNodeRelative(this._clickedElement.parentElement! as NodeComponent, this._mousePositionX  - this._previousMouseEvent!.clientX, this._mousePositionY - this._previousMouseEvent!.clientY);
                         break;
                     case 'NODE-OUTPUT-PORT-COMPONENT':
-                        this._editorComponent!.drawConnection(this._clickedElement.element! as NodeOutputPortComponent, this._mousePositionX, this._mousePositionY);
+                        this._editorComponent!.drawGhostConnection(this._clickedElement.element! as NodeOutputPortComponent, this._mousePositionX, this._mousePositionY);
                         break;
                 };
 
