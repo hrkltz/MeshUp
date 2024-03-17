@@ -1,6 +1,7 @@
 import { CSSResult, LitElement, TemplateResult, css, html } from 'lit';
-import { customElement, query } from 'lit/decorators.js';
+import { customElement, query, state } from 'lit/decorators.js';
 import { NodeComponent } from './node_component';
+import { NodeOutputPortComponent } from './node_output_port_component';
 
 
 @customElement('editor-component')
@@ -14,11 +15,13 @@ export class EditorComponent extends LitElement {
         }
     `;
 
-    _offsetX: number = 0;
-    _offsetY: number = 0;
-    _zoom: number = 1.0;
+    
     @query('g#transformer', true) _transformer!: SVGElement;
     @query('svg', true) _svg!: SVGElement;
+    private _offsetX: number = 0;
+    private _offsetY: number = 0;
+    private _zoom: number = 1.0;
+    private _ghostConnection: SVGLineElement | null = null;
 
 
     override render(): TemplateResult {
@@ -52,18 +55,36 @@ export class EditorComponent extends LitElement {
     };
 
 
-    public transformRelative(x: number, y: number) {
-        this._offsetX += x/this._zoom;
-        this._offsetY += y/this._zoom;
+    private _calculateXAbsolute(x: number): number {
+        const svgRect = this._svg.getBoundingClientRect()!;
+        return (x - svgRect.left - this._offsetX)/this._zoom;
+    }
+
+
+    private _calculateYAbsolute(y: number): number {
+        const svgRect = this._svg.getBoundingClientRect()!;
+        return (y - svgRect.top - this._offsetY)/this._zoom;
+    }
+
+
+    public resetView() {
+        this._offsetX = 0;
+        this._offsetY = 0;
+        this._zoom = 1.0;
+        this.requestUpdate();
+    }
+
+
+    public transformRelative(dX: number, dY: number) {
+        this._offsetX += dX/this._zoom;
+        this._offsetY += dY/this._zoom;
         this.requestUpdate();
     }
 
 
     public addNode(x: number, y: number) {
-        // Get the cursor position relative to the start point of the svg element.
-        let svgRect = this._svg.getBoundingClientRect()!;
-        let cX: number = ((x - this._offsetX) - svgRect.left)/this._zoom;
-        let cY: number = ((y - this._offsetY) - svgRect.top)/this._zoom;
+        let cX: number = this._calculateXAbsolute(x);
+        let cY: number = this._calculateYAbsolute(y);
         // Create a new node component and append it to the transformer.
         const nodeComponent = new NodeComponent();
         let foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
@@ -83,6 +104,28 @@ export class EditorComponent extends LitElement {
         const y = Number(foreignObject!.getAttribute('y'));
         foreignObject!.setAttribute('x', `${x + dX/this._zoom}`);
         foreignObject!.setAttribute('y', `${y + dY/this._zoom}`);
+    }
+
+
+    public drawConnection(nodeOutputPortComponent: NodeOutputPortComponent, x: number, y: number) {
+        if (this._ghostConnection === null) {
+            this._ghostConnection = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            this._ghostConnection.style.stroke = 'black';
+            this._ghostConnection.style.strokeWidth = '2';
+            this._ghostConnection.setAttribute('x1', String(this._calculateXAbsolute(nodeOutputPortComponent.cX)));
+            this._ghostConnection.setAttribute('y1', String(this._calculateYAbsolute(nodeOutputPortComponent.cY)));
+            this._transformer.appendChild(this._ghostConnection);
+        }
+
+        this._ghostConnection.setAttribute('x2', String(this._calculateXAbsolute(x)));
+        this._ghostConnection.setAttribute('y2', String(this._calculateYAbsolute(y)));
+        this.requestUpdate();
+    }
+
+
+    public clearGhostConnection() {
+        this._transformer.removeChild(this._ghostConnection!);
+        this._ghostConnection = null;
     }
 
 

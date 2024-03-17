@@ -18,6 +18,14 @@ export class NodeOutputPortComponent extends LitElement {
     `;
 
 
+    public get cX() : number {
+        return this.getBoundingClientRect().left + this.getBoundingClientRect().width/2;
+    }
+    public get cY() : number {
+        return this.getBoundingClientRect().top + this.getBoundingClientRect().height/2;
+    }
+
+
     override render() {
         return html`<slot></slot>`;
     }

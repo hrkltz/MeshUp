@@ -2,6 +2,7 @@ import { CSSResult, LitElement, css, html } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import { EditorComponent } from './editor_component';
 import { NodeComponent } from './node_component';
+import { NodeOutputPortComponent } from './node_output_port_component';
 
 
 @customElement('app-component')
@@ -84,6 +85,9 @@ export class AppComponent extends LitElement {
                     case 'ArrowRight':
                         this._editorComponent!.transformRelative(-25, 0);
                         break;
+                    case 'Home':
+                        this._editorComponent!.resetView();
+                        break;
                     case 'a':
                         this._editorComponent!.addNode(this._mousePositionX, this._mousePositionY);
                         break;
@@ -113,8 +117,12 @@ export class AppComponent extends LitElement {
 
 
     _onMouseDown(event: MouseEvent): void {
-        this._clickedElement = this._findPointedElement();
-        this._previousMouseEvent = event;
+        switch (event.button) {
+            case 0:
+                this._clickedElement = this._findPointedElement();
+                this._previousMouseEvent = event;
+                break;
+        }
     }
 
 
@@ -134,6 +142,9 @@ export class AppComponent extends LitElement {
                     case 'NODE-CORE-COMPONENT':
                         this._editorComponent!.moveNodeRelative(this._clickedElement.parentElement! as NodeComponent, this._mousePositionX  - this._previousMouseEvent!.clientX, this._mousePositionY - this._previousMouseEvent!.clientY);
                         break;
+                    case 'NODE-OUTPUT-PORT-COMPONENT':
+                        this._editorComponent!.drawConnection(this._clickedElement.element! as NodeOutputPortComponent, this._mousePositionX, this._mousePositionY);
+                        break;
                 };
 
                 this._previousMouseEvent = event;
@@ -142,9 +153,22 @@ export class AppComponent extends LitElement {
     };
 
 
-    _onMouseUp(_: MouseEvent): void {
-        this._clickedElement = { element: null, parentElement: null };
-        this._previousMouseEvent = null;
+    _onMouseUp(event: MouseEvent): void {
+        console.log('AppComponent._onMouseUp', event.button);
+        switch (event.button) {
+            case 0:
+                switch (this._clickedElement.element!.tagName) {
+                    case 'EDITOR-COMPONENT': break;
+                    case 'NODE-CORE-COMPONENT': break;
+                    case 'NODE-OUTPUT-PORT-COMPONENT':
+                        this._editorComponent!.clearGhostConnection();
+                        break;
+                };
+
+                this._clickedElement = { element: null, parentElement: null };
+                this._previousMouseEvent = null;
+                break;
+        }
     };
 
 
