@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 @customElement('node-component')
 export class NodeComponent extends LitElement {
     static override styles: CSSResult = css`
-        :host {
+        node-component {
             display: flex;
             flex-direction: row;
             width: 100%;
@@ -14,14 +14,14 @@ export class NodeComponent extends LitElement {
             box-sizing: border-box;
         }
 
-        :host > div.input-container,
-        :host > div.output-container {
+        node-component > div.input-container,
+        node-component > div.output-container {
             height: 100%;
             box-sizing: border-box;
             flex: 0 0 20px;
         }
 
-        :host > node-core-component {
+        node-component > node-core-component {
             height: 100%;
             flex: 1 1 auto;
             background-color: #fff;
@@ -29,8 +29,8 @@ export class NodeComponent extends LitElement {
             border: 1px solid grey;
         }
 
-        :host > div.input-container > node-input-port-component,
-        :host > div.output-container > node-output-port-component {
+        node-component > div.input-container > node-input-port-component,
+        node-component > div.output-container > node-output-port-component {
             height: 20px;
             width: 100%;
             box-sizing: border-box;
@@ -58,5 +58,11 @@ export class NodeComponent extends LitElement {
                 <node-output-port-component id="${this.id}.out3">3</node-output-port-component>
             </div>
         `;
+    }
+
+
+    // Disable shadow DOM for this element.
+    protected createRenderRoot() {
+        return this;
     }
 }

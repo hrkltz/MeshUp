@@ -178,28 +178,16 @@ export class AppComponent extends LitElement {
 
     // Note: parentElement crossing shadowRoot is not working.
     _findPointedElement(): { element: Element | null, parentElement: Element | null } {
-        let myTree = []
-        let lowestShadowRoot = this.shadowRoot!.elementsFromPoint(this._mousePositionX, this._mousePositionY)!;
-        let editorComponent = lowestShadowRoot.find((e) => e.tagName === 'EDITOR-COMPONENT');
+        let myTree: Element[] = [];
+        let appShadowRoot = this.shadowRoot!.elementsFromPoint(this._mousePositionX, this._mousePositionY);
+        let editorComponent = appShadowRoot.find((e) => e.tagName === 'EDITOR-COMPONENT');
 
-        if (editorComponent) {
+        if (editorComponent) 
+        {
             myTree.push(editorComponent);
-
-            lowestShadowRoot = editorComponent.shadowRoot!.elementsFromPoint(this._mousePositionX, this._mousePositionY);
-            let nodeComponent = lowestShadowRoot.find((e) => e.tagName === 'NODE-COMPONENT');
-
-            if (nodeComponent) {
-                myTree.push(nodeComponent);
-    
-                lowestShadowRoot = nodeComponent.shadowRoot!.elementsFromPoint(this._mousePositionX, this._mousePositionY);
-                let partComponent = lowestShadowRoot.find((e) => e.tagName === 'NODE-INPUT-PORT-COMPONENT' || e.tagName === 'NODE-CORE-COMPONENT' || e.tagName === 'NODE-OUTPUT-PORT-COMPONENT');
-
-                if (partComponent) {
-                    myTree.push(partComponent);
-                };
-            };
+            myTree.push(...(editorComponent as EditorComponent).elementsFromPoint(this._mousePositionX, this._mousePositionY));
         };
 
         return { element: myTree.pop()?? null, parentElement: myTree.pop()?? null };
-    }
-}
+    };
+};

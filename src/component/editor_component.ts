@@ -1,20 +1,27 @@
-import { CSSResult, LitElement, TemplateResult, css, html } from 'lit';
-import { customElement, query, state } from 'lit/decorators.js';
+import { CSSResultGroup, LitElement, TemplateResult, css, html } from 'lit';
+import { customElement, query } from 'lit/decorators.js';
 import { NodeComponent } from './node_component';
 import { NodeOutputPortComponent } from './node_output_port_component';
 import { NodeInputPortComponent } from './node_input_port_component';
+import { NodeCoreComponent } from './node_core_component';
 
 
 @customElement('editor-component')
 export class EditorComponent extends LitElement {
-    static override styles: CSSResult = css`
-        :host,
-        svg {
-            width: 100%;
-            height: 100%;
-            box-sizing: border-box;
-        }
-    `;
+    static override styles: CSSResultGroup = [
+        css`
+            :host,
+            svg {
+                width: 100%;
+                height: 100%;
+                box-sizing: border-box;
+            }
+        `,
+        NodeComponent.styles,
+        NodeOutputPortComponent.styles,
+        NodeInputPortComponent.styles,
+        NodeCoreComponent.styles,
+    ];
 
     
     @query('g#transformer', true) _transformer!: SVGElement;
@@ -54,6 +61,17 @@ export class EditorComponent extends LitElement {
         console.log('EditorComponent.onkeydown', event.key);
         event.stopPropagation();
     };
+
+
+    public elementsFromPoint(x: number, y: number): Element[] {
+        let elementArray = [];
+        let shadowRootElementArray = this.shadowRoot!.elementsFromPoint(x, y)!;
+        let nodeComponent = shadowRootElementArray.find((e) => e.tagName === 'NODE-COMPONENT');
+        if (nodeComponent) elementArray.push(nodeComponent);
+        let nodePartComponent = shadowRootElementArray.find((e) => e.tagName === 'NODE-INPUT-PORT-COMPONENT' || e.tagName === 'NODE-CORE-COMPONENT' || e.tagName === 'NODE-OUTPUT-PORT-COMPONENT');
+        if (nodePartComponent) elementArray.push(nodePartComponent);
+        return elementArray;
+    }
 
 
     private _calculateXAbsolute(x: number): number {

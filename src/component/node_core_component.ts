@@ -1,11 +1,11 @@
-import { CSSResult, LitElement, css, html } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { CSSResult, LitElement, css } from 'lit';
+import { customElement } from 'lit/decorators.js';
 
 
 @customElement('node-core-component')
 export class NodeCoreComponent extends LitElement {
     static override styles: CSSResult = css`
-        :host {
+        node-core-component {
             align-items: center;
             background-color: var(--background-day);
             border: 1px solid var(--border-day);
@@ -18,10 +18,16 @@ export class NodeCoreComponent extends LitElement {
         }
 
         @media (prefers-color-scheme: dark) {
-            :host {
+            node-core-component {
                 background-color: var(--background-night);
                 border-color: var(--border-night);
             }
         }
     `;
+
+
+    // Disable shadow DOM for this element.
+    protected createRenderRoot() {
+        return this;
+    }
 }

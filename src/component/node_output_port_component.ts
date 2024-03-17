@@ -5,7 +5,7 @@ import { customElement } from 'lit/decorators.js';
 @customElement('node-output-port-component')
 export class NodeOutputPortComponent extends LitElement {
     static override styles: CSSResult = css`
-        :host {
+        node-output-port-component {
             display: block;
             height: 100%;
             width: 100%;
@@ -28,5 +28,11 @@ export class NodeOutputPortComponent extends LitElement {
 
     override render() {
         return html`<slot></slot>`;
+    }
+
+
+    // Disable shadow DOM for this element.
+    protected createRenderRoot() {
+        return this;
     }
 }
