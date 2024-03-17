@@ -6,13 +6,20 @@ import { customElement } from 'lit/decorators.js';
 export class NodeCoreComponent extends LitElement {
     static override styles: CSSResult = css`
         :host {
+            background-color: var(--background-day);
+            border: 1px solid var(--border-day);
+            box-sizing: border-box;
+            color: #000000;
             display: block;
             height: 100%;
             width: 100%;
-            background-color: #ffffff;
-            color: #000000;
-            box-sizing: border-box;
-            border: 1px solid grey;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :host {
+                background-color: var(--background-night);
+                border-color: var(--border-night);
+            }
         }
     `;
 }

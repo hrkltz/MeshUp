@@ -7,8 +7,15 @@ export class InfoComponent extends LitElement {
     static override styles: CSSResult = css`
         :host {
             box-sizing: border-box;
-            background-color: #ffffff;
-            border: 1px solid grey;
+            background-color: var(--background-day);
+            border: 1px solid var(--border-day);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :host {
+                background-color: var(--background-night);
+                border-color: var(--border-night);
+            }
         }
     `;
 

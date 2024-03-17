@@ -3,6 +3,7 @@ import { customElement, query, state } from 'lit/decorators.js';
 import { EditorComponent } from './editor_component';
 import { NodeComponent } from './node_component';
 import { NodeOutputPortComponent } from './node_output_port_component';
+import { NodeInputPortComponent } from './node_input_port_component';
 
 
 @customElement('app-component')
@@ -135,6 +136,7 @@ export class AppComponent extends LitElement {
                 this._hoveredElement = this._findPointedElement();
                 break;
             case 1:
+                this._hoveredElement = this._findPointedElement();
                 switch (this._clickedElement.element!.tagName) {
                     case 'EDITOR-COMPONENT':
                         this._editorComponent!.transformRelative(this._mousePositionX  - this._previousMouseEvent!.clientX, this._mousePositionY - this._previousMouseEvent!.clientY);
@@ -154,7 +156,6 @@ export class AppComponent extends LitElement {
 
 
     _onMouseUp(event: MouseEvent): void {
-        console.log('AppComponent._onMouseUp', event.button);
         switch (event.button) {
             case 0:
                 switch (this._clickedElement.element!.tagName) {
@@ -162,6 +163,9 @@ export class AppComponent extends LitElement {
                     case 'NODE-CORE-COMPONENT': break;
                     case 'NODE-OUTPUT-PORT-COMPONENT':
                         this._editorComponent!.clearGhostConnection();
+
+                        if (this._hoveredElement.element!.tagName === 'NODE-INPUT-PORT-COMPONENT')
+                            this._editorComponent!.createConnection(this._clickedElement.element! as NodeOutputPortComponent, this._hoveredElement.element! as NodeInputPortComponent);
                         break;
                 };
 
@@ -174,29 +178,28 @@ export class AppComponent extends LitElement {
 
     // Note: parentElement crossing shadowRoot is not working.
     _findPointedElement(): { element: Element | null, parentElement: Element | null } {
-        let pointedElement1 = this.shadowRoot!.elementFromPoint(this._mousePositionX, this._mousePositionY)!;
+        let myTree = []
+        let lowestShadowRoot = this.shadowRoot!.elementsFromPoint(this._mousePositionX, this._mousePositionY)!;
+        let editorComponent = lowestShadowRoot.find((e) => e.tagName === 'EDITOR-COMPONENT');
 
-        switch (pointedElement1.tagName) {
-            case 'EDITOR-COMPONENT':
-                let pointedElement2 = pointedElement1.shadowRoot!.elementFromPoint(this._mousePositionX, this._mousePositionY)!;
+        if (editorComponent) {
+            myTree.push(editorComponent);
 
-                switch (pointedElement2.tagName) {
-                    case 'NODE-COMPONENT':
-                        let pointedElement3 = pointedElement2.shadowRoot!.elementFromPoint(this._mousePositionX, this._mousePositionY)!;
-                    
-                        switch (pointedElement3.tagName) {
-                            case 'NODE-INPUT-PORT-COMPONENT':
-                            case 'NODE-OUTPUT-PORT-COMPONENT':
-                            case 'NODE-CORE-COMPONENT':
-                                return { element: pointedElement3, parentElement: pointedElement2};
-                            default:
-                                return { element: pointedElement2, parentElement: pointedElement1};
-                        }
-                    default:
-                        return { element: pointedElement1, parentElement: null};
+            lowestShadowRoot = editorComponent.shadowRoot!.elementsFromPoint(this._mousePositionX, this._mousePositionY);
+            let nodeComponent = lowestShadowRoot.find((e) => e.tagName === 'NODE-COMPONENT');
+
+            if (nodeComponent) {
+                myTree.push(nodeComponent);
+    
+                lowestShadowRoot = nodeComponent.shadowRoot!.elementsFromPoint(this._mousePositionX, this._mousePositionY);
+                let partComponent = lowestShadowRoot.find((e) => e.tagName === 'NODE-INPUT-PORT-COMPONENT' || e.tagName === 'NODE-CORE-COMPONENT' || e.tagName === 'NODE-OUTPUT-PORT-COMPONENT');
+
+                if (partComponent) {
+                    myTree.push(partComponent);
                 };
-            default:
-                return {element: null, parentElement: null}
+            };
         };
+
+        return { element: myTree.pop()?? null, parentElement: myTree.pop()?? null };
     }
 }

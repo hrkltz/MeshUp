@@ -2,6 +2,7 @@ import { CSSResult, LitElement, TemplateResult, css, html } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
 import { NodeComponent } from './node_component';
 import { NodeOutputPortComponent } from './node_output_port_component';
+import { NodeInputPortComponent } from './node_input_port_component';
 
 
 @customElement('editor-component')
@@ -120,6 +121,18 @@ export class EditorComponent extends LitElement {
         this._ghostConnection.setAttribute('x2', String(this._calculateXAbsolute(x)));
         this._ghostConnection.setAttribute('y2', String(this._calculateYAbsolute(y)));
         this.requestUpdate();
+    }
+
+
+    public createConnection(nodeOutputPortComponent: NodeOutputPortComponent, nodeInputPortComponent: NodeInputPortComponent) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.style.stroke = 'blue';
+        line.style.strokeWidth = '2';
+        line.setAttribute('x1', String(this._calculateXAbsolute(nodeOutputPortComponent.cX)));
+        line.setAttribute('y1', String(this._calculateYAbsolute(nodeOutputPortComponent.cY)));
+        line.setAttribute('x2', String(this._calculateXAbsolute(nodeInputPortComponent.cX)));
+        line.setAttribute('y2', String(this._calculateYAbsolute(nodeInputPortComponent.cY)));
+        this._transformer.appendChild(line);
     }
 
 
