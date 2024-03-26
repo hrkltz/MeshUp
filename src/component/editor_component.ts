@@ -4,6 +4,7 @@ import { NodeComponent } from './node_component';
 import { NodeOutputPortComponent } from './node_output_port_component';
 import { NodeInputPortComponent } from './node_input_port_component';
 import { NodeCoreComponent } from './node_core_component';
+import { IndexedDBUtil } from '../util/indexeddb_util';
 
 
 @customElement('editor-component')
@@ -168,6 +169,38 @@ export class EditorComponent extends LitElement {
                         break;
                     case 'a':
                         this._addNode(this._mousePositionX, this._mousePositionY);
+                        break;
+                    case 's':
+                        IndexedDBUtil.openDatabase('editor', 1, (db) => {
+                            console.log('Upgrade needed');
+                            db.createObjectStore('editor');
+                        }).then((db) => {
+                            console.log('DB opened');
+                            IndexedDBUtil.openObjectStore(db, 'editor', 'readwrite').then((objectStore) => {
+                                console.log('Object store obtained');
+                                IndexedDBUtil.putRecord(objectStore, 'test', { x: this._offsetX, y: this._offsetY, zoom: this._zoom }).then(() => {
+                                    console.log('Record put');
+                                });
+                            });
+                        });
+                        break;
+                    case 'l':
+                        IndexedDBUtil.openDatabase('editor', 1, (db) => {
+                            console.log('Upgrade needed');
+                            db.createObjectStore('editor');
+                        }).then((db) => {
+                            console.log('DB opened');
+                            IndexedDBUtil.openObjectStore(db, 'editor', 'readwrite').then((objectStore) => {
+                                console.log('Object store obtained');
+                                IndexedDBUtil.getRecord(objectStore, 'test').then((record) => {
+                                    console.log('Record obtained');
+                                    this._offsetX = record.x;
+                                    this._offsetY = record.y;
+                                    this._zoom = record.zoom;
+                                    this.requestUpdate();
+                                });
+                            });
+                        });
                         break;
                 };
                 break;
