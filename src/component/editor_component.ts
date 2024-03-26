@@ -72,9 +72,13 @@ export class EditorComponent extends LitElement {
         let tmpZoom = this._zoom + event.deltaY*0.001;
 
         // Limit the zoom level.
-        if (tmpZoom <= 0.5) this._zoom = 0.5;
-        else if (tmpZoom >= 1.5) this._zoom = 1.5;
-        else this._zoom = tmpZoom;
+        if (tmpZoom <= 0.5) {
+            this._zoom = 0.5;
+        } else if (tmpZoom >= 1.5) {
+            this._zoom = 1.5;
+        } else {
+            this._zoom = tmpZoom;
+        };
 
         this.requestUpdate();
     };
@@ -280,7 +284,9 @@ export class EditorComponent extends LitElement {
 
     private _createConnection(nodeOutputPortComponent: NodeOutputPortComponent, nodeInputPortComponent: NodeInputPortComponent) {
         // Don't connect if both ports are part of the same node.
-        if (nodeOutputPortComponent.id.split('.')[0] === nodeInputPortComponent.id.split('.')[0]) return;
+        if (nodeOutputPortComponent.id.split('.')[0] === nodeInputPortComponent.id.split('.')[0]) {
+            return;
+        };
 
         // TODO: Don't connect if the input port is already connected.
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -304,10 +310,10 @@ export class EditorComponent extends LitElement {
     private _deleteNode(nodeComponent: NodeComponent) {
         const foreignObject = nodeComponent.parentElement;
         //// ShadowRoot again. :/ Let's dissable it.
-        const connectedLines = [].filter.call(this.shadowRoot!.querySelectorAll('line'), (e: SVGLineElement) => e.id.includes(nodeComponent.id));
+        const connectedLineArray = [].filter.call(this.shadowRoot!.querySelectorAll('line'), (e: SVGLineElement) => e.id.includes(nodeComponent.id));
 
-        for (let i = 0; i < connectedLines.length; i++) {
-            this._transformer.removeChild(connectedLines[i]);
+        for (let i = 0; i < connectedLineArray.length; i++) {
+            this._transformer.removeChild(connectedLineArray[i]);
         };
 
         this._transformer.removeChild(foreignObject!);
@@ -320,7 +326,7 @@ export class EditorComponent extends LitElement {
         if (this.shadowRoot!.elementsFromPoint(x, y).includes(this)) {
             myTree.push(this);
             myTree.push(...this._elementsFromPoint(x, y));
-        }
+        };
 
         return { element: myTree.pop()?? null, parentElement: myTree.pop()?? null };
     };
