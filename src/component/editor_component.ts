@@ -236,11 +236,30 @@ export class EditorComponent extends LitElement {
 
     
     private _moveNodeRelative(nodeComponent: NodeComponent, dX: number, dY: number) {
+        // Move the node component.
         const foreignObject = nodeComponent.parentElement;
         const x = Number(foreignObject!.getAttribute('x'));
         const y = Number(foreignObject!.getAttribute('y'));
         foreignObject!.setAttribute('x', `${x + dX/this._zoom}`);
         foreignObject!.setAttribute('y', `${y + dY/this._zoom}`);
+        // Move all connected lines.
+        const connectedLineArray = [].filter.call(this.shadowRoot!.querySelectorAll('line'), (e: SVGLineElement) => e.id.includes(nodeComponent.id)) as SVGLineElement[];
+        
+        for (let i = 0; i < connectedLineArray.length; i++) {
+            const line = connectedLineArray[i];
+
+            if (line.id.startsWith(nodeComponent.id)) {
+                const x1 = Number(line.getAttribute('x1'));
+                const y1 = Number(line.getAttribute('y1'));
+                line.setAttribute('x1', `${x1 + dX/this._zoom}`);
+                line.setAttribute('y1', `${y1 + dY/this._zoom}`);
+            } else {
+                const x2 = Number(line.getAttribute('x2'));
+                const y2 = Number(line.getAttribute('y2'));
+                line.setAttribute('x2', `${x2 + dX/this._zoom}`);
+                line.setAttribute('y2', `${y2 + dY/this._zoom}`);
+            };
+        };
     };
 
 
