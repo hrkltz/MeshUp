@@ -247,6 +247,7 @@ export class EditorComponent extends LitElement {
         foreignObject!.setAttribute('x', `${x + dX/this._zoom}`);
         foreignObject!.setAttribute('y', `${y + dY/this._zoom}`);
         // Move all connected lines.
+        // OPTIMIZE: Do this just once during the mousedown event.
         const connectedLineArray = [].filter.call(this.shadowRoot!.querySelectorAll('line'), (e: SVGLineElement) => e.id.includes(nodeComponent.id)) as SVGLineElement[];
         
         for (let i = 0; i < connectedLineArray.length; i++) {
