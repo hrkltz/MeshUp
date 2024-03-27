@@ -5,6 +5,8 @@ import { NodeOutputPortComponent } from './node_output_port_component';
 import { NodeInputPortComponent } from './node_input_port_component';
 import { NodeCoreComponent } from './node_core_component';
 import { IndexedDBUtil } from '../util/indexeddb_util';
+import { NodeObject } from '../object/node_object';
+import { ProjectObject } from '../object/project_object';
 
 
 @customElement('editor-component')
@@ -44,15 +46,14 @@ export class EditorComponent extends LitElement {
     private _previousMouseEvent: MouseEvent | null = null;
     private _zoom: number = 1.0;
 
-
+    // Note: Don't add a new line or empty character between <g..> and </g> tags, as it will be rendered as a text.
     override render(): TemplateResult {
         return html`
             <svg
             id="svg">
                 <g
                 id="transformer"
-                transform="translate(${this._offsetX},${this._offsetY}) scale(${this._zoom})">
-                </g>
+                transform="translate(${this._offsetX},${this._offsetY}) scale(${this._zoom})"></g>
             </svg>
             <info-component selectedElementTagName=${this._hoveredElement.element ? this._hoveredElement.element.tagName : ''}></info-component>
         `;
@@ -171,36 +172,10 @@ export class EditorComponent extends LitElement {
                         this._addNode(this._mousePositionX, this._mousePositionY);
                         break;
                     case 's':
-                        IndexedDBUtil.openDatabase('editor', 1, (db) => {
-                            console.log('Upgrade needed');
-                            db.createObjectStore('editor');
-                        }).then((db) => {
-                            console.log('DB opened');
-                            IndexedDBUtil.openObjectStore(db, 'editor', 'readwrite').then((objectStore) => {
-                                console.log('Object store obtained');
-                                IndexedDBUtil.putRecord(objectStore, 'test', { x: this._offsetX, y: this._offsetY, zoom: this._zoom }).then(() => {
-                                    console.log('Record put');
-                                });
-                            });
-                        });
+                        this._saveProject();
                         break;
                     case 'l':
-                        IndexedDBUtil.openDatabase('editor', 1, (db) => {
-                            console.log('Upgrade needed');
-                            db.createObjectStore('editor');
-                        }).then((db) => {
-                            console.log('DB opened');
-                            IndexedDBUtil.openObjectStore(db, 'editor', 'readwrite').then((objectStore) => {
-                                console.log('Object store obtained');
-                                IndexedDBUtil.getRecord(objectStore, 'test').then((record) => {
-                                    console.log('Record obtained');
-                                    this._offsetX = record.x;
-                                    this._offsetY = record.y;
-                                    this._zoom = record.zoom;
-                                    this.requestUpdate();
-                                });
-                            });
-                        });
+                        this._loadProject();
                         break;
                 };
                 break;
@@ -382,5 +357,90 @@ export class EditorComponent extends LitElement {
         };
 
         return elementArray;
+    };
+
+
+    private _saveProject(): void {
+        // Serialize the graph.
+        const childNodeArray = this._transformer.childNodes;
+        const foreignObjectArray = [].filter.call(childNodeArray, (e: SVGForeignObjectElement) => e.tagName === 'foreignObject') as SVGForeignObjectElement[];
+        const lineArray = [].filter.call(childNodeArray, (e: SVGLineElement) => e.tagName === 'line') as SVGLineElement[];
+        const projectObject: ProjectObject = new ProjectObject();
+        // Create an array of nodes.
+        foreignObjectArray.forEach(foreignObject => {
+            const nodeComponent = foreignObject.childNodes[0] as NodeComponent;
+            projectObject.nodeArray.push({
+                code: '',
+                id: nodeComponent.id,
+                inputPortArray: [ [], [], [] ],
+                outputPortArray: [ [], [], [] ],
+                type: 'javascript',
+                x: Number.parseInt(foreignObject.getAttribute('x')!),
+                y: Number.parseInt(foreignObject.getAttribute('y')!),
+            });
+        });
+        // Store the connections.
+        lineArray.forEach(line => {
+            const splittedLineId = line.id.split(':');
+            ([].find.call(projectObject.nodeArray, (e: NodeObject) => splittedLineId[0].startsWith(e.id))! as NodeObject)
+                .outputPortArray[Number(splittedLineId[0].split('.')[1])].push(splittedLineId[1]);
+            ([].find.call(projectObject.nodeArray, (e: NodeObject) => splittedLineId[1].startsWith(e.id))! as NodeObject)
+                .inputPortArray[Number(splittedLineId[1].split('.')[1])].push(splittedLineId[0]);
+        });
+
+        // Save the serialized graph to IndexedDB.
+        IndexedDBUtil.openDatabase('editor', 1, (db) => {
+            db.createObjectStore('editor');
+        }).then((db) => {
+            IndexedDBUtil.openObjectStore(db, 'editor', 'readwrite').then((objectStore) => {
+                IndexedDBUtil.putRecord(objectStore, 'test', projectObject).then(() => {
+                    console.log('Record put');
+                });
+            });
+        });
+    };
+
+
+    private _loadProject(): void {
+        // Load the serialized graph from IndexedDB.
+        IndexedDBUtil.openDatabase('editor', 1, (db) => {
+            db.createObjectStore('editor');
+        }).then((db) => {
+            IndexedDBUtil.openObjectStore(db, 'editor', 'readwrite').then((objectStore) => {
+                IndexedDBUtil.getRecord(objectStore, 'test').then((projectObject: ProjectObject) => {
+                    // Deserialize the graph.
+                    projectObject.nodeArray.forEach(nodeObject => {
+                        // Create a new node component and append it to the transformer.
+                        const nodeComponent = new NodeComponent();
+                        nodeComponent.id = nodeObject.id;
+                        nodeComponent.x = nodeObject.x;
+                        nodeComponent.y = nodeObject.y;
+                        let foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+                        foreignObject.style.boxSizing = 'border-box';
+                        foreignObject.setAttribute('x', String(nodeObject.x));
+                        foreignObject.setAttribute('y', String(nodeObject.y));
+                        foreignObject.setAttribute('width', nodeComponent.width);
+                        foreignObject.setAttribute('height', nodeComponent.height);
+                        foreignObject.appendChild(nodeComponent);
+                        this._transformer.appendChild(foreignObject);
+                        // Create the connections.
+                        // TODO.
+                        //nodeObject.outputPortArray.forEach((outputPortArray, outputPortIndex) => {
+                        //    outputPortArray.forEach(outputPortId => {
+                        //        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        //        line.style.stroke = 'blue';
+                        //        line.style.strokeWidth = '2';
+                        //        line.id = `${nodeObject.id}.${outputPortIndex}:${outputPortId}`;
+                        //        line.setAttribute('x1', String((this._transformer.querySelector(`#${outputPortId}`) as NodeOutputPortComponent).cX));
+                        //        line.setAttribute('y1', String((this._transformer.querySelector(`#${outputPortId}`) as NodeOutputPortComponent).cY));
+                        //        line.setAttribute('x2', String((this._transformer.querySelector(`#${inputPortId}`) as NodeInputPortComponent).cX));
+                        //        line.setAttribute('y2', String((this._transformer.querySelector(`#${inputPortId}`) as NodeInputPortComponent).cY));
+                        //        this._transformer.appendChild(line);
+                        //    });
+                        //});
+                    });
+                });
+            });
+        });
     };
 };

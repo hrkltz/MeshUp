@@ -48,15 +48,15 @@ export class NodeComponent extends LitElement {
     override render() {
         return html`
             <div class="input-container">
-                <node-input-port-component id="${this.id}.in1">1</node-input-port-component>
-                <node-input-port-component id="${this.id}.in2">2</node-input-port-component>
-                <node-input-port-component id="${this.id}.in3">3</node-input-port-component>
+                <node-input-port-component id="${this.id}.0">0</node-input-port-component>
+                <node-input-port-component id="${this.id}.1">1</node-input-port-component>
+                <node-input-port-component id="${this.id}.2">2</node-input-port-component>
             </div>
             <node-core-component></node-core-component>
             <div class="output-container">
-                <node-output-port-component id="${this.id}.out1">1</node-output-port-component>
-                <node-output-port-component id="${this.id}.out2">2</node-output-port-component>
-                <node-output-port-component id="${this.id}.out3">3</node-output-port-component>
+                <node-output-port-component id="${this.id}.0">0</node-output-port-component>
+                <node-output-port-component id="${this.id}.1">1</node-output-port-component>
+                <node-output-port-component id="${this.id}.2">2</node-output-port-component>
             </div>
         `;
     };
