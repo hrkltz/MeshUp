@@ -30,7 +30,10 @@ export class InfoComponent extends LitElement {
                     <h2>Info Box</h2>
                     <p>Editor<br />A: Add node</p>
                 `;
+            case 'MERGE-NODE':
             case 'NODE-COMPONENT':
+            case 'SCRIPT-NODE':
+            case 'START-SOURCE-NODE':
                 return html`
                     <h2>Info Box</h2>
                     <p>Node<br />d: Delete</p>

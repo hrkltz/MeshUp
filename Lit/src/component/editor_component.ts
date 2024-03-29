@@ -7,6 +7,8 @@ import { NodeCoreComponent } from './node_core_component';
 import { IndexedDBUtil } from '../util/indexeddb_util';
 import { NodeObject } from '../object/node_object';
 import { ProjectObject } from '../object/project_object';
+import { AddNodeDialog } from '../dialog/add_node_dialog';
+import { StartSourceNode } from '../node/start_source_node';
 
 
 @customElement('editor-component')
@@ -28,6 +30,7 @@ export class EditorComponent extends LitElement {
             }
         `,
         NodeComponent.styles,
+        StartSourceNode.styles,
         NodeOutputPortComponent.styles,
         NodeInputPortComponent.styles,
         NodeCoreComponent.styles,
@@ -231,19 +234,43 @@ export class EditorComponent extends LitElement {
     };
 
 
-    private _addNode(x: number, y: number) {
-        let cX: number = this._calculateXAbsolute(x);
-        let cY: number = this._calculateYAbsolute(y);
-        // Create a new node component and append it to the transformer.
-        const nodeComponent = new NodeComponent();
-        let foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-        foreignObject.style.boxSizing = 'border-box';
-        foreignObject.setAttribute('x', String(cX-55));
-        foreignObject.setAttribute('y', String(cY-55));
-        foreignObject.setAttribute('width', nodeComponent.width);
-        foreignObject.setAttribute('height', nodeComponent.height);
-        foreignObject.appendChild(nodeComponent);
-        this._transformer.appendChild(foreignObject);
+    private async _addNode(x: number, y: number) {
+        const result = await AddNodeDialog.open();
+
+        console.log(result)
+        switch (result) {
+            case 'StartSourceNode': {
+                let cX: number = this._calculateXAbsolute(x);
+                let cY: number = this._calculateYAbsolute(y);
+                // Create a new node component and append it to the transformer.
+                const nodeComponent = new StartSourceNode();
+                let foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+                foreignObject.style.boxSizing = 'border-box';
+                foreignObject.setAttribute('x', String(cX-55));
+                foreignObject.setAttribute('y', String(cY-55));
+                foreignObject.setAttribute('width', nodeComponent.width);
+                foreignObject.setAttribute('height', nodeComponent.height);
+                foreignObject.appendChild(nodeComponent);
+                this._transformer.appendChild(foreignObject);
+            } break;
+            case 'ScriptNode': {
+                let cX: number = this._calculateXAbsolute(x);
+                let cY: number = this._calculateYAbsolute(y);
+                // Create a new node component and append it to the transformer.
+                const nodeComponent = new NodeComponent();
+                let foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+                foreignObject.style.boxSizing = 'border-box';
+                foreignObject.setAttribute('x', String(cX-55));
+                foreignObject.setAttribute('y', String(cY-55));
+                foreignObject.setAttribute('width', nodeComponent.width);
+                foreignObject.setAttribute('height', nodeComponent.height);
+                foreignObject.appendChild(nodeComponent);
+                this._transformer.appendChild(foreignObject);
+            } break;
+            case 'MergeNode':
+                break;
+        };
+        return;
     };
 
     
@@ -344,7 +371,7 @@ export class EditorComponent extends LitElement {
     private _elementsFromPoint(x: number, y: number): Element[] {
         let elementArray = [];
         let shadowRootElementArray = this.shadowRoot!.elementsFromPoint(x, y)!;
-        let nodeComponent = shadowRootElementArray.find((e) => e.tagName === 'NODE-COMPONENT');
+        let nodeComponent = shadowRootElementArray.find((e) => e.tagName === 'NODE-COMPONENT' || e.tagName === 'START-SOURCE-NODE' || e.tagName === 'SCRIPT-NODE' || e.tagName === 'MERGE-NODE');
         
         if (nodeComponent) {
             elementArray.push(nodeComponent);
@@ -368,16 +395,23 @@ export class EditorComponent extends LitElement {
         const projectObject: ProjectObject = new ProjectObject();
         // Create an array of nodes.
         foreignObjectArray.forEach(foreignObject => {
-            const nodeComponent = foreignObject.childNodes[0] as NodeComponent;
-            projectObject.nodeArray.push({
-                code: '',
-                id: nodeComponent.id,
-                inputPortArray: [ [], [], [] ],
-                outputPortArray: [ [], [], [] ],
-                type: 'javascript',
-                x: Number.parseInt(foreignObject.getAttribute('x')!),
-                y: Number.parseInt(foreignObject.getAttribute('y')!),
-            });
+            console.log((foreignObject.childNodes[0] as HTMLElement).tagName);
+            switch ((foreignObject.childNodes[0] as HTMLElement).tagName.toLowerCase()) {
+                case 'start-source-node': {
+                    const nodeComponent = foreignObject.childNodes[0] as StartSourceNode;
+                    const nodeObject = new NodeObject(nodeComponent.id, 'start-source-node', Number.parseInt(foreignObject.getAttribute('x')!), Number.parseInt(foreignObject.getAttribute('y')!));
+                    nodeObject.outputPortArray.push([]);
+                    projectObject.nodeArray.push(nodeObject);
+                } break;
+                case 'node-component': {
+                    const nodeComponent = foreignObject.childNodes[0] as NodeComponent;
+                    const nodeObject = new NodeObject(nodeComponent.id, 'script-node', Number.parseInt(foreignObject.getAttribute('x')!), Number.parseInt(foreignObject.getAttribute('y')!));
+                    nodeObject.inputPortArray = [[], [], []];
+                    nodeObject.outputPortArray = [[], [], []];
+                    nodeObject.contentJson = '{"code": ""}';
+                    projectObject.nodeArray.push(nodeObject);
+                } break;
+            };
         });
         // Store the connections.
         lineArray.forEach(line => {
@@ -411,20 +445,38 @@ export class EditorComponent extends LitElement {
                     // Deserialize the graph.
                     projectObject.nodeArray.forEach(nodeObject => {
                         // Create a new node component and append it to the transformer.
-                        const nodeComponent = new NodeComponent();
-                        nodeComponent.id = nodeObject.id;
-                        nodeComponent.x = nodeObject.x;
-                        nodeComponent.y = nodeObject.y;
-                        let foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-                        foreignObject.style.boxSizing = 'border-box';
-                        foreignObject.setAttribute('x', String(nodeObject.x));
-                        foreignObject.setAttribute('y', String(nodeObject.y));
-                        foreignObject.setAttribute('width', nodeComponent.width);
-                        foreignObject.setAttribute('height', nodeComponent.height);
-                        foreignObject.appendChild(nodeComponent);
-                        this._transformer.appendChild(foreignObject);
+                        switch (nodeObject.type) {
+                            case 'start-source-node': {
+                                const nodeComponent = new StartSourceNode();
+                                nodeComponent.id = nodeObject.id;
+                                nodeComponent.x = nodeObject.x;
+                                nodeComponent.y = nodeObject.y;
+                                let foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+                                foreignObject.style.boxSizing = 'border-box';
+                                foreignObject.setAttribute('x', String(nodeObject.x));
+                                foreignObject.setAttribute('y', String(nodeObject.y));
+                                foreignObject.setAttribute('width', nodeComponent.width);
+                                foreignObject.setAttribute('height', nodeComponent.height);
+                                foreignObject.appendChild(nodeComponent);
+                                this._transformer.appendChild(foreignObject);
+                            } break;
+                            case 'script-node': {
+                                const nodeComponent = new NodeComponent();
+                                nodeComponent.id = nodeObject.id;
+                                nodeComponent.x = nodeObject.x;
+                                nodeComponent.y = nodeObject.y;
+                                let foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+                                foreignObject.style.boxSizing = 'border-box';
+                                foreignObject.setAttribute('x', String(nodeObject.x));
+                                foreignObject.setAttribute('y', String(nodeObject.y));
+                                foreignObject.setAttribute('width', nodeComponent.width);
+                                foreignObject.setAttribute('height', nodeComponent.height);
+                                foreignObject.appendChild(nodeComponent);
+                                this._transformer.appendChild(foreignObject);
+                            } break;
+                        };
+
                         // Create the connections.
-                        // TODO.
                         //nodeObject.outputPortArray.forEach((outputPortArray, outputPortIndex) => {
                         //    outputPortArray.forEach(outputPortId => {
                         //        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
