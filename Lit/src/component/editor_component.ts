@@ -1,6 +1,6 @@
 import { CSSResultGroup, LitElement, TemplateResult, css, html } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
-import { NodeComponent } from './node_component';
+import { ScriptNode } from '../node/script_node';
 import { NodeOutputPortComponent } from './node_output_port_component';
 import { NodeInputPortComponent } from './node_input_port_component';
 import { NodeCoreComponent } from './node_core_component';
@@ -29,7 +29,7 @@ export class EditorComponent extends LitElement {
                 z-index: 10;
             }
         `,
-        NodeComponent.styles,
+        ScriptNode.styles,
         StartSourceNode.styles,
         NodeOutputPortComponent.styles,
         NodeInputPortComponent.styles,
@@ -115,7 +115,7 @@ export class EditorComponent extends LitElement {
                         this._transformRelative(event.clientX  - this._previousMouseEvent!.clientX, event.clientY - this._previousMouseEvent!.clientY);
                         break;
                     case 'NODE-CORE-COMPONENT':
-                        this._moveNodeRelative(this._clickedElement.parentElement! as NodeComponent, event.clientX  - this._previousMouseEvent!.clientX, event.clientY - this._previousMouseEvent!.clientY);
+                        this._moveNodeRelative(this._clickedElement.parentElement! as ScriptNode, event.clientX  - this._previousMouseEvent!.clientX, event.clientY - this._previousMouseEvent!.clientY);
                         break;
                     case 'NODE-OUTPUT-PORT-COMPONENT':
                         this._drawGhostConnection(this._clickedElement.element! as NodeOutputPortComponent, event.clientX, event.clientY);
@@ -185,19 +185,19 @@ export class EditorComponent extends LitElement {
             case 'NODE-CORE-COMPONENT':
                 switch (event.key) {
                     case 'ArrowUp':
-                        this._moveNodeRelative(this._hoveredElement.parentElement as NodeComponent, 0, -25);
+                        this._moveNodeRelative(this._hoveredElement.parentElement as ScriptNode, 0, -25);
                         break;
                     case 'ArrowDown':
-                        this._moveNodeRelative(this._hoveredElement.parentElement as NodeComponent, 0, 25);
+                        this._moveNodeRelative(this._hoveredElement.parentElement as ScriptNode, 0, 25);
                         break;
                     case 'ArrowLeft':
-                        this._moveNodeRelative(this._hoveredElement.parentElement as NodeComponent, -25, 0);
+                        this._moveNodeRelative(this._hoveredElement.parentElement as ScriptNode, -25, 0);
                         break;
                     case 'ArrowRight':
-                        this._moveNodeRelative(this._hoveredElement.parentElement as NodeComponent, 25, 0);
+                        this._moveNodeRelative(this._hoveredElement.parentElement as ScriptNode, 25, 0);
                         break;
                     case 'd':
-                        this._deleteNode(this._hoveredElement.parentElement as NodeComponent);
+                        this._deleteNode(this._hoveredElement.parentElement as ScriptNode);
                         break;
                 };
                 break;
@@ -243,28 +243,28 @@ export class EditorComponent extends LitElement {
                 let cX: number = this._calculateXAbsolute(x);
                 let cY: number = this._calculateYAbsolute(y);
                 // Create a new node component and append it to the transformer.
-                const nodeComponent = new StartSourceNode();
+                const scriptNode = new StartSourceNode();
                 let foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
                 foreignObject.style.boxSizing = 'border-box';
                 foreignObject.setAttribute('x', String(cX-55));
                 foreignObject.setAttribute('y', String(cY-55));
-                foreignObject.setAttribute('width', nodeComponent.width);
-                foreignObject.setAttribute('height', nodeComponent.height);
-                foreignObject.appendChild(nodeComponent);
+                foreignObject.setAttribute('width', scriptNode.width);
+                foreignObject.setAttribute('height', scriptNode.height);
+                foreignObject.appendChild(scriptNode);
                 this._transformer.appendChild(foreignObject);
             } break;
             case 'ScriptNode': {
                 let cX: number = this._calculateXAbsolute(x);
                 let cY: number = this._calculateYAbsolute(y);
                 // Create a new node component and append it to the transformer.
-                const nodeComponent = new NodeComponent();
+                const scriptNode = new ScriptNode();
                 let foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
                 foreignObject.style.boxSizing = 'border-box';
                 foreignObject.setAttribute('x', String(cX-55));
                 foreignObject.setAttribute('y', String(cY-55));
-                foreignObject.setAttribute('width', nodeComponent.width);
-                foreignObject.setAttribute('height', nodeComponent.height);
-                foreignObject.appendChild(nodeComponent);
+                foreignObject.setAttribute('width', scriptNode.width);
+                foreignObject.setAttribute('height', scriptNode.height);
+                foreignObject.appendChild(scriptNode);
                 this._transformer.appendChild(foreignObject);
             } break;
             case 'MergeNode':
@@ -274,21 +274,21 @@ export class EditorComponent extends LitElement {
     };
 
     
-    private _moveNodeRelative(nodeComponent: NodeComponent, dX: number, dY: number) {
+    private _moveNodeRelative(scriptNode: ScriptNode, dX: number, dY: number) {
         // Move the node component.
-        const foreignObject = nodeComponent.parentElement;
+        const foreignObject = scriptNode.parentElement;
         const x = Number(foreignObject!.getAttribute('x'));
         const y = Number(foreignObject!.getAttribute('y'));
         foreignObject!.setAttribute('x', `${x + dX/this._zoom}`);
         foreignObject!.setAttribute('y', `${y + dY/this._zoom}`);
         // Move all connected lines.
         // OPTIMIZE: Do this just once during the mousedown event.
-        const connectedLineArray = [].filter.call(this.shadowRoot!.querySelectorAll('line'), (e: SVGLineElement) => e.id.includes(nodeComponent.id)) as SVGLineElement[];
+        const connectedLineArray = [].filter.call(this.shadowRoot!.querySelectorAll('line'), (e: SVGLineElement) => e.id.includes(scriptNode.id)) as SVGLineElement[];
         
         for (let i = 0; i < connectedLineArray.length; i++) {
             const line = connectedLineArray[i];
 
-            if (line.id.startsWith(nodeComponent.id)) {
+            if (line.id.startsWith(scriptNode.id)) {
                 const x1 = Number(line.getAttribute('x1'));
                 const y1 = Number(line.getAttribute('y1'));
                 line.setAttribute('x1', `${x1 + dX/this._zoom}`);
@@ -343,10 +343,10 @@ export class EditorComponent extends LitElement {
     };
 
 
-    private _deleteNode(nodeComponent: NodeComponent) {
-        const foreignObject = nodeComponent.parentElement;
+    private _deleteNode(scriptNode: ScriptNode) {
+        const foreignObject = scriptNode.parentElement;
         //// ShadowRoot again. :/ Let's dissable it.
-        const connectedLineArray = [].filter.call(this.shadowRoot!.querySelectorAll('line'), (e: SVGLineElement) => e.id.includes(nodeComponent.id));
+        const connectedLineArray = [].filter.call(this.shadowRoot!.querySelectorAll('line'), (e: SVGLineElement) => e.id.includes(scriptNode.id));
 
         for (let i = 0; i < connectedLineArray.length; i++) {
             this._transformer.removeChild(connectedLineArray[i]);
@@ -371,10 +371,10 @@ export class EditorComponent extends LitElement {
     private _elementsFromPoint(x: number, y: number): Element[] {
         let elementArray = [];
         let shadowRootElementArray = this.shadowRoot!.elementsFromPoint(x, y)!;
-        let nodeComponent = shadowRootElementArray.find((e) => e.tagName === 'NODE-COMPONENT' || e.tagName === 'START-SOURCE-NODE' || e.tagName === 'SCRIPT-NODE' || e.tagName === 'MERGE-NODE');
+        let scriptNode = shadowRootElementArray.find((e) => e.tagName === 'SCRIPT-NODE' || e.tagName === 'START-SOURCE-NODE' || e.tagName === 'SCRIPT-NODE' || e.tagName === 'MERGE-NODE');
         
-        if (nodeComponent) {
-            elementArray.push(nodeComponent);
+        if (scriptNode) {
+            elementArray.push(scriptNode);
         
             let nodePartComponent = shadowRootElementArray.find((e) => e.tagName === 'NODE-INPUT-PORT-COMPONENT' || e.tagName === 'NODE-CORE-COMPONENT' || e.tagName === 'NODE-OUTPUT-PORT-COMPONENT');
             
@@ -398,14 +398,14 @@ export class EditorComponent extends LitElement {
             console.log((foreignObject.childNodes[0] as HTMLElement).tagName);
             switch ((foreignObject.childNodes[0] as HTMLElement).tagName.toLowerCase()) {
                 case 'start-source-node': {
-                    const nodeComponent = foreignObject.childNodes[0] as StartSourceNode;
-                    const nodeObject = new NodeObject(nodeComponent.id, 'start-source-node', Number.parseInt(foreignObject.getAttribute('x')!), Number.parseInt(foreignObject.getAttribute('y')!));
+                    const scriptNode = foreignObject.childNodes[0] as StartSourceNode;
+                    const nodeObject = new NodeObject(scriptNode.id, 'start-source-node', Number.parseInt(foreignObject.getAttribute('x')!), Number.parseInt(foreignObject.getAttribute('y')!));
                     nodeObject.outputPortArray.push([]);
                     projectObject.nodeArray.push(nodeObject);
                 } break;
-                case 'node-component': {
-                    const nodeComponent = foreignObject.childNodes[0] as NodeComponent;
-                    const nodeObject = new NodeObject(nodeComponent.id, 'script-node', Number.parseInt(foreignObject.getAttribute('x')!), Number.parseInt(foreignObject.getAttribute('y')!));
+                case 'script-node': {
+                    const scriptNode = foreignObject.childNodes[0] as ScriptNode;
+                    const nodeObject = new NodeObject(scriptNode.id, 'script-node', Number.parseInt(foreignObject.getAttribute('x')!), Number.parseInt(foreignObject.getAttribute('y')!));
                     nodeObject.inputPortArray = [[], [], []];
                     nodeObject.outputPortArray = [[], [], []];
                     nodeObject.contentJson = '{"code": ""}';
@@ -447,31 +447,31 @@ export class EditorComponent extends LitElement {
                         // Create a new node component and append it to the transformer.
                         switch (nodeObject.type) {
                             case 'start-source-node': {
-                                const nodeComponent = new StartSourceNode();
-                                nodeComponent.id = nodeObject.id;
-                                nodeComponent.x = nodeObject.x;
-                                nodeComponent.y = nodeObject.y;
+                                const scriptNode = new StartSourceNode();
+                                scriptNode.id = nodeObject.id;
+                                scriptNode.x = nodeObject.x;
+                                scriptNode.y = nodeObject.y;
                                 let foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
                                 foreignObject.style.boxSizing = 'border-box';
                                 foreignObject.setAttribute('x', String(nodeObject.x));
                                 foreignObject.setAttribute('y', String(nodeObject.y));
-                                foreignObject.setAttribute('width', nodeComponent.width);
-                                foreignObject.setAttribute('height', nodeComponent.height);
-                                foreignObject.appendChild(nodeComponent);
+                                foreignObject.setAttribute('width', scriptNode.width);
+                                foreignObject.setAttribute('height', scriptNode.height);
+                                foreignObject.appendChild(scriptNode);
                                 this._transformer.appendChild(foreignObject);
                             } break;
                             case 'script-node': {
-                                const nodeComponent = new NodeComponent();
-                                nodeComponent.id = nodeObject.id;
-                                nodeComponent.x = nodeObject.x;
-                                nodeComponent.y = nodeObject.y;
+                                const scriptNode = new ScriptNode();
+                                scriptNode.id = nodeObject.id;
+                                scriptNode.x = nodeObject.x;
+                                scriptNode.y = nodeObject.y;
                                 let foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
                                 foreignObject.style.boxSizing = 'border-box';
                                 foreignObject.setAttribute('x', String(nodeObject.x));
                                 foreignObject.setAttribute('y', String(nodeObject.y));
-                                foreignObject.setAttribute('width', nodeComponent.width);
-                                foreignObject.setAttribute('height', nodeComponent.height);
-                                foreignObject.appendChild(nodeComponent);
+                                foreignObject.setAttribute('width', scriptNode.width);
+                                foreignObject.setAttribute('height', scriptNode.height);
+                                foreignObject.appendChild(scriptNode);
                                 this._transformer.appendChild(foreignObject);
                             } break;
                         };

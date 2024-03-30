@@ -31,7 +31,7 @@ export class InfoComponent extends LitElement {
                     <p>Editor<br />A: Add node</p>
                 `;
             case 'MERGE-NODE':
-            case 'NODE-COMPONENT':
+            case 'SCRIPT-NODE':
             case 'SCRIPT-NODE':
             case 'START-SOURCE-NODE':
                 return html`
