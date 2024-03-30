@@ -1,13 +1,14 @@
+import { AddNodeDialog } from '../dialog/add_node_dialog';
 import { CSSResultGroup, LitElement, TemplateResult, css, html } from 'lit';
 import { customElement, query, state } from 'lit/decorators.js';
-import { ScriptNode } from '../node/script_node';
-import { NodeOutputPortComponent } from './node_output_port_component';
-import { NodeInputPortComponent } from './node_input_port_component';
-import { NodeCoreComponent } from './node_core_component';
 import { IndexedDBUtil } from '../util/indexeddb_util';
+import { MergeNode } from '../node/merge_node';
+import { NodeCoreComponent } from './node_core_component';
+import { NodeInputPortComponent } from './node_input_port_component';
 import { NodeObject } from '../object/node_object';
+import { NodeOutputPortComponent } from './node_output_port_component';
 import { ProjectObject } from '../object/project_object';
-import { AddNodeDialog } from '../dialog/add_node_dialog';
+import { ScriptNode } from '../node/script_node';
 import { StartSourceNode } from '../node/start_source_node';
 
 
@@ -29,11 +30,14 @@ export class EditorComponent extends LitElement {
                 z-index: 10;
             }
         `,
-        ScriptNode.styles,
-        StartSourceNode.styles,
+        // Node component styles. (Note: The styles are not encapsulated in the shadow DOM as we don't use shadow DOM.)
         NodeOutputPortComponent.styles,
         NodeInputPortComponent.styles,
         NodeCoreComponent.styles,
+        // Node styles. (Note: The styles are not encapsulated in the shadow DOM as we don't use shadow DOM.)
+        MergeNode.styles,
+        ScriptNode.styles,
+        StartSourceNode.styles,
     ];
 
     
@@ -52,11 +56,8 @@ export class EditorComponent extends LitElement {
     // Note: Don't add a new line or empty character between <g..> and </g> tags, as it will be rendered as a text.
     override render(): TemplateResult {
         return html`
-            <svg
-            id="svg">
-                <g
-                id="transformer"
-                transform="translate(${this._offsetX},${this._offsetY}) scale(${this._zoom})"></g>
+            <svg id="svg">
+                <g id="transformer" transform="translate(${this._offsetX},${this._offsetY}) scale(${this._zoom})"></g>
             </svg>
             <info-component selectedElementTagName=${this._hoveredElement.element ? this._hoveredElement.element.tagName : ''}></info-component>
         `;
@@ -115,7 +116,7 @@ export class EditorComponent extends LitElement {
                         this._transformRelative(event.clientX  - this._previousMouseEvent!.clientX, event.clientY - this._previousMouseEvent!.clientY);
                         break;
                     case 'NODE-CORE-COMPONENT':
-                        this._moveNodeRelative(this._clickedElement.parentElement! as ScriptNode, event.clientX  - this._previousMouseEvent!.clientX, event.clientY - this._previousMouseEvent!.clientY);
+                        this._moveNodeRelative(this._clickedElement.parentElement! as any, event.clientX  - this._previousMouseEvent!.clientX, event.clientY - this._previousMouseEvent!.clientY);
                         break;
                     case 'NODE-OUTPUT-PORT-COMPONENT':
                         this._drawGhostConnection(this._clickedElement.element! as NodeOutputPortComponent, event.clientX, event.clientY);
@@ -185,19 +186,19 @@ export class EditorComponent extends LitElement {
             case 'NODE-CORE-COMPONENT':
                 switch (event.key) {
                     case 'ArrowUp':
-                        this._moveNodeRelative(this._hoveredElement.parentElement as ScriptNode, 0, -25);
+                        this._moveNodeRelative(this._hoveredElement.parentElement as any, 0, -25);
                         break;
                     case 'ArrowDown':
-                        this._moveNodeRelative(this._hoveredElement.parentElement as ScriptNode, 0, 25);
+                        this._moveNodeRelative(this._hoveredElement.parentElement as any, 0, 25);
                         break;
                     case 'ArrowLeft':
-                        this._moveNodeRelative(this._hoveredElement.parentElement as ScriptNode, -25, 0);
+                        this._moveNodeRelative(this._hoveredElement.parentElement as any, -25, 0);
                         break;
                     case 'ArrowRight':
-                        this._moveNodeRelative(this._hoveredElement.parentElement as ScriptNode, 25, 0);
+                        this._moveNodeRelative(this._hoveredElement.parentElement as any, 25, 0);
                         break;
                     case 'd':
-                        this._deleteNode(this._hoveredElement.parentElement as ScriptNode);
+                        this._deleteNode(this._hoveredElement.parentElement as any);
                         break;
                 };
                 break;
@@ -237,20 +238,33 @@ export class EditorComponent extends LitElement {
     private async _addNode(x: number, y: number) {
         const result = await AddNodeDialog.open();
 
-        console.log(result)
         switch (result) {
-            case 'StartSourceNode': {
+            case 'MergeNode': {
                 let cX: number = this._calculateXAbsolute(x);
                 let cY: number = this._calculateYAbsolute(y);
                 // Create a new node component and append it to the transformer.
-                const scriptNode = new StartSourceNode();
+                const mergeNode = new MergeNode();
                 let foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
                 foreignObject.style.boxSizing = 'border-box';
                 foreignObject.setAttribute('x', String(cX-55));
                 foreignObject.setAttribute('y', String(cY-55));
-                foreignObject.setAttribute('width', scriptNode.width);
-                foreignObject.setAttribute('height', scriptNode.height);
-                foreignObject.appendChild(scriptNode);
+                foreignObject.setAttribute('width', mergeNode.width);
+                foreignObject.setAttribute('height', mergeNode.height);
+                foreignObject.appendChild(mergeNode);
+                this._transformer.appendChild(foreignObject);
+            } break;
+            case 'StartSourceNode': {
+                let cX: number = this._calculateXAbsolute(x);
+                let cY: number = this._calculateYAbsolute(y);
+                // Create a new node component and append it to the transformer.
+                const startSourceNode = new StartSourceNode();
+                let foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+                foreignObject.style.boxSizing = 'border-box';
+                foreignObject.setAttribute('x', String(cX-55));
+                foreignObject.setAttribute('y', String(cY-55));
+                foreignObject.setAttribute('width', startSourceNode.width);
+                foreignObject.setAttribute('height', startSourceNode.height);
+                foreignObject.appendChild(startSourceNode);
                 this._transformer.appendChild(foreignObject);
             } break;
             case 'ScriptNode': {
@@ -267,28 +281,26 @@ export class EditorComponent extends LitElement {
                 foreignObject.appendChild(scriptNode);
                 this._transformer.appendChild(foreignObject);
             } break;
-            case 'MergeNode':
-                break;
         };
         return;
     };
 
     
-    private _moveNodeRelative(scriptNode: ScriptNode, dX: number, dY: number) {
+    private _moveNodeRelative(node: any, dX: number, dY: number) {
         // Move the node component.
-        const foreignObject = scriptNode.parentElement;
+        const foreignObject = node.parentElement;
         const x = Number(foreignObject!.getAttribute('x'));
         const y = Number(foreignObject!.getAttribute('y'));
         foreignObject!.setAttribute('x', `${x + dX/this._zoom}`);
         foreignObject!.setAttribute('y', `${y + dY/this._zoom}`);
         // Move all connected lines.
         // OPTIMIZE: Do this just once during the mousedown event.
-        const connectedLineArray = [].filter.call(this.shadowRoot!.querySelectorAll('line'), (e: SVGLineElement) => e.id.includes(scriptNode.id)) as SVGLineElement[];
+        const connectedLineArray = [].filter.call(this.shadowRoot!.querySelectorAll('line'), (e: SVGLineElement) => e.id.includes(node.id)) as SVGLineElement[];
         
         for (let i = 0; i < connectedLineArray.length; i++) {
             const line = connectedLineArray[i];
 
-            if (line.id.startsWith(scriptNode.id)) {
+            if (line.id.startsWith(node.id)) {
                 const x1 = Number(line.getAttribute('x1'));
                 const y1 = Number(line.getAttribute('y1'));
                 line.setAttribute('x1', `${x1 + dX/this._zoom}`);
@@ -343,10 +355,11 @@ export class EditorComponent extends LitElement {
     };
 
 
-    private _deleteNode(scriptNode: ScriptNode) {
-        const foreignObject = scriptNode.parentElement;
+    // TODO: Replace any with a general Node element.
+    private _deleteNode(node: any) {
+        const foreignObject = node.parentElement;
         //// ShadowRoot again. :/ Let's dissable it.
-        const connectedLineArray = [].filter.call(this.shadowRoot!.querySelectorAll('line'), (e: SVGLineElement) => e.id.includes(scriptNode.id));
+        const connectedLineArray = [].filter.call(this.shadowRoot!.querySelectorAll('line'), (e: SVGLineElement) => e.id.includes(node.id));
 
         for (let i = 0; i < connectedLineArray.length; i++) {
             this._transformer.removeChild(connectedLineArray[i]);
@@ -370,11 +383,11 @@ export class EditorComponent extends LitElement {
 
     private _elementsFromPoint(x: number, y: number): Element[] {
         let elementArray = [];
-        let shadowRootElementArray = this.shadowRoot!.elementsFromPoint(x, y)!;
-        let scriptNode = shadowRootElementArray.find((e) => e.tagName === 'SCRIPT-NODE' || e.tagName === 'START-SOURCE-NODE' || e.tagName === 'SCRIPT-NODE' || e.tagName === 'MERGE-NODE');
+        const shadowRootElementArray = this.shadowRoot!.elementsFromPoint(x, y)!;
+        const node = shadowRootElementArray.find((e) => e.tagName === 'SCRIPT-NODE' || e.tagName === 'START-SOURCE-NODE' || e.tagName === 'SCRIPT-NODE' || e.tagName === 'MERGE-NODE');
         
-        if (scriptNode) {
-            elementArray.push(scriptNode);
+        if (node) {
+            elementArray.push(node);
         
             let nodePartComponent = shadowRootElementArray.find((e) => e.tagName === 'NODE-INPUT-PORT-COMPONENT' || e.tagName === 'NODE-CORE-COMPONENT' || e.tagName === 'NODE-OUTPUT-PORT-COMPONENT');
             
@@ -397,9 +410,16 @@ export class EditorComponent extends LitElement {
         foreignObjectArray.forEach(foreignObject => {
             console.log((foreignObject.childNodes[0] as HTMLElement).tagName);
             switch ((foreignObject.childNodes[0] as HTMLElement).tagName.toLowerCase()) {
+                case 'merge-node': {
+                    const mergeNode = foreignObject.childNodes[0] as MergeNode;
+                    const nodeObject = new NodeObject(mergeNode.id, 'merge-node', Number.parseInt(foreignObject.getAttribute('x')!), Number.parseInt(foreignObject.getAttribute('y')!));
+                    nodeObject.inputPortArray = [[], [], []];
+                    nodeObject.outputPortArray = [[], [], []];
+                    projectObject.nodeArray.push(nodeObject);
+                } break;
                 case 'start-source-node': {
-                    const scriptNode = foreignObject.childNodes[0] as StartSourceNode;
-                    const nodeObject = new NodeObject(scriptNode.id, 'start-source-node', Number.parseInt(foreignObject.getAttribute('x')!), Number.parseInt(foreignObject.getAttribute('y')!));
+                    const startsourceNode = foreignObject.childNodes[0] as StartSourceNode;
+                    const nodeObject = new NodeObject(startsourceNode.id, 'start-source-node', Number.parseInt(foreignObject.getAttribute('x')!), Number.parseInt(foreignObject.getAttribute('y')!));
                     nodeObject.outputPortArray.push([]);
                     projectObject.nodeArray.push(nodeObject);
                 } break;
@@ -446,18 +466,32 @@ export class EditorComponent extends LitElement {
                     projectObject.nodeArray.forEach(nodeObject => {
                         // Create a new node component and append it to the transformer.
                         switch (nodeObject.type) {
-                            case 'start-source-node': {
-                                const scriptNode = new StartSourceNode();
-                                scriptNode.id = nodeObject.id;
-                                scriptNode.x = nodeObject.x;
-                                scriptNode.y = nodeObject.y;
+                            case 'merge-node': {
+                                const mergeNode = new MergeNode();
+                                mergeNode.id = nodeObject.id;
+                                mergeNode.x = nodeObject.x;
+                                mergeNode.y = nodeObject.y;
                                 let foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
                                 foreignObject.style.boxSizing = 'border-box';
                                 foreignObject.setAttribute('x', String(nodeObject.x));
                                 foreignObject.setAttribute('y', String(nodeObject.y));
-                                foreignObject.setAttribute('width', scriptNode.width);
-                                foreignObject.setAttribute('height', scriptNode.height);
-                                foreignObject.appendChild(scriptNode);
+                                foreignObject.setAttribute('width', mergeNode.width);
+                                foreignObject.setAttribute('height', mergeNode.height);
+                                foreignObject.appendChild(mergeNode);
+                                this._transformer.appendChild(foreignObject);
+                            } break;
+                            case 'start-source-node': {
+                                const startsourceNode = new StartSourceNode();
+                                startsourceNode.id = nodeObject.id;
+                                startsourceNode.x = nodeObject.x;
+                                startsourceNode.y = nodeObject.y;
+                                let foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+                                foreignObject.style.boxSizing = 'border-box';
+                                foreignObject.setAttribute('x', String(nodeObject.x));
+                                foreignObject.setAttribute('y', String(nodeObject.y));
+                                foreignObject.setAttribute('width', startsourceNode.width);
+                                foreignObject.setAttribute('height', startsourceNode.height);
+                                foreignObject.appendChild(startsourceNode);
                                 this._transformer.appendChild(foreignObject);
                             } break;
                             case 'script-node': {
