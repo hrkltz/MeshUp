@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    kotlin("plugin.serialization") version "1.9.23"
 }
 
 android {
@@ -50,9 +51,18 @@ android {
 }
 
 dependencies {
+    // JavaScriptEngine
     implementation("androidx.javascriptengine:javascriptengine:1.0.0-beta01")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.6.0")
-
+    //// GraalJS
+    //implementation("org.graalvm.js:js:23.0.3")
+    //// Javet (Node)
+    ////implementation("com.caoccao.javet:javet-android-node:3.1.0")
+    // Javet (V8)
+    implementation("com.caoccao.javet:javet-android-v8:3.1.0")
+    // JSON
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    // Default imports.
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
